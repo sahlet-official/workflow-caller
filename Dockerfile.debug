@@ -1,0 +1,17 @@
+# Stage 1: Development image
+FROM node:23-alpine
+
+WORKDIR /app
+
+COPY package*.json tsconfig.json ./
+
+RUN npm install
+
+COPY ./src ./src
+
+RUN npm install -g ts-node typescript
+
+EXPOSE 3000
+EXPOSE 9229
+
+CMD ["node", "--inspect=0.0.0.0:9229", "-r", "ts-node/register", "src/app.ts"]

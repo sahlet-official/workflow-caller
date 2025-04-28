@@ -1,0 +1,13 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test01-wrong-destination:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Echo
+        run: |
+          echo "test works"

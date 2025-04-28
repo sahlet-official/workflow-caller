@@ -1,0 +1,17 @@
+services:
+  workflow-caller:
+    image: workflow-caller
+    environment:
+      PORT: ${INTERNAL_PORT}
+      NODE_ENV: production
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "${EXTERNAL_PORT}:${INTERNAL_PORT}"
+    secrets:
+      - github_private_key
+
+secrets:
+  github_private_key:
+    file: ${WORKFLOW_CALL_GITHUB_PRIVATE_KEY_PATH}
