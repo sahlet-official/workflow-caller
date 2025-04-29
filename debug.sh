@@ -1,2 +1,2 @@
-docker-compose -f docker-compose.debug.yml build
-docker-compose -f docker-compose.debug.yml up
+docker-compose -f docker-compose.yml build workflow-caller-debug
+docker-compose -f docker-compose.yml up workflow-caller-debug
