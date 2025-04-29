@@ -6,6 +6,7 @@ import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
 import { components } from "@octokit/openapi-types";
 import { v4 as uuidv4 } from 'uuid';
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 function readSecret(secretName: string): string {
     try {
@@ -14,6 +15,17 @@ function readSecret(secretName: string): string {
         console.error(`Failed to read secret ${secretName}`, error);
         throw error;
     }
+}
+
+async function validateGitHubOICDToken(token: string, expectedAudience: string): Promise<Record<string, unknown>> {
+    const jwks = createRemoteJWKSet(
+        new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
+    );
+    const { payload } = await jwtVerify(token, jwks, {
+        audience: expectedAudience,
+        issuer: "https://token.actions.githubusercontent.com",
+    });
+    return payload;
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -158,11 +170,23 @@ async function run() {
 
 const app = express();
 const port = process.env.PORT!;
+const OICDAudience = process.env.OICD_AUDIENCE_IDENTIFIER!;
 
-app.get('/', async (req, res) => {
-    await run().catch(console.error);
-    res.send(`Hello World!`);
+app.post('/', async (req, res) => {
+    const body = req.body;
+    if (await validateGitHubOICDToken(body.token, "OICDAudience")) {
+        await run().catch(console.error);
+        res.send('OK');
+    } else {
+        res.send('NOT OK');
+        res.status(401).json({ error: "Unauthorized", message: "NOT OK" });
+    }
 });
+
+// app.get('/', async (req, res) => {
+//     await run().catch(console.error);
+//     res.send(`Hello World!`);
+// });
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

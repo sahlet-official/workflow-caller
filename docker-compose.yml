@@ -6,6 +6,7 @@ services:
       PORT: ${INTERNAL_PORT}
       NODE_ENV: production
       GITHUB_APP_ID: ${WORKFLOW_CALL_GITHUB_APP_ID}
+      OICD_AUDIENCE_IDENTIFIER: ${WORKFLOW_CALL_OICD_AUDIENCE_IDENTIFIER}
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -20,6 +21,7 @@ services:
       PORT: ${INTERNAL_PORT}
       NODE_ENV: development
       GITHUB_APP_ID: ${WORKFLOW_CALL_GITHUB_APP_ID}
+      OICD_AUDIENCE_IDENTIFIER: ${WORKFLOW_CALL_OICD_AUDIENCE_IDENTIFIER}
     build:
       context: .
       dockerfile: ./Dockerfile.debug
