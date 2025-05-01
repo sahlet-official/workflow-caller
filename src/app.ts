@@ -18,6 +18,7 @@ function readSecret(secretName: string): string {
 }
 
 async function validateGitHubOICDToken(token: string, expectedAudience: string): Promise<Record<string, unknown>> {
+    //https://gal.hagever.com/posts/authenticating-github-actions-requests-with-github-openid-connect
     const jwks = createRemoteJWKSet(
         new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
     );
