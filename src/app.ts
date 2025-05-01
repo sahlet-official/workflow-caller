@@ -89,6 +89,7 @@ async function run() {
     let run: WorkflowRun | null = null;
 
     for (let index = 0; index < 15; index++) {
+        // https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-workflow
         const { data: runs } = await octokit.actions.listWorkflowRuns({
             owner,
             repo,

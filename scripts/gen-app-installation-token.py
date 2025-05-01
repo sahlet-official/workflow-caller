@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import sys
 import time
 import os
@@ -117,6 +118,8 @@ if not encoded_jwt:
     print("encoded_jwt=null", file=sys.stderr)
     sys.exit(1)
 
+# --------------------------------------------------------
+
 if REPO_NAME:
     installation_id = get_repo_installation_id(encoded_jwt, OWNER_NAME, REPO_NAME)
 
@@ -130,10 +133,18 @@ if not installation_id:
     print("installation_id=null", file=sys.stderr)
     sys.exit(1)
 
+print("✅ Got installation_id", file=sys.stderr)
+
+# --------------------------------------------------------
+
 installation_token = get_installation_token(encoded_jwt, installation_id)
 
 if not installation_token:
     print("installation_token=null", file=sys.stderr)
     sys.exit(1)
+
+print("✅ Got installation_token", file=sys.stderr)
+
+# --------------------------------------------------------
 
 sys.stdout.write(installation_token)
