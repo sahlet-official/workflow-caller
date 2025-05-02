@@ -55,18 +55,17 @@ def trigger_workflow_dispatch(owner, repo, workflow_file, branch, workflow_input
 
     data = {
         "ref": branch,
-        "inputs": workflow_input_json
+        "inputs": json.loads(workflow_input_json)
     }
 
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
+        return True
 
     except Exception as err:
         print(f"An error occurred: {err}", file=sys.stderr)
         return None
-
-    return True
 
 # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-workflow
 def find_run_by_run_unique_id(owner, repo, workflow_file, branch, run_unique_id, timestamp, token):
