@@ -163,12 +163,8 @@ def get_artifact_download_url(owner, repo, artifact_id, archive_format, token):
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, allow_redirects=False)
         response.raise_for_status()
-
-        print(f"response.headers = {response.headers}", file=sys.stderr)
-        print(f"response.content = {response.content}", file=sys.stderr)
-        print(f"response.headers = {response.headers.get("Location:", "")}", file=sys.stderr)
 
         download_url = response.headers.get("Location", "")
         return download_url
