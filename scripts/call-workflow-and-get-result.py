@@ -166,7 +166,7 @@ def get_artifact_download_url(owner, repo, artifact_id, archive_format, token):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
-        download_url = response.json().get("url", "")
+        download_url = response.headers.get("Location")
         return download_url
     except Exception as err:
         print(f"An error occurred: {err}", file=sys.stderr)
@@ -288,7 +288,7 @@ for artifact in artifacts:
         result_artifact = artifact
 
 if not result_artifact:
-    print(f"￣\_(ツ)_/￣ There is no '{artifact_name}' artifact", file=sys.stderr)
+    print(f"￣\\_(ツ)_/￣ There is no '{artifact_name}' artifact", file=sys.stderr)
     sys.exit(0)
 
 artifact_download_url = get_artifact_download_url(OWNER_NAME, REPO_NAME, result_artifact.get("id", ""), "zip", INSTALLATION_TOKEN)
@@ -303,7 +303,7 @@ result_file_name = "result.json"
 run_result = download_and_extract_artifact(artifact_download_url, result_file_name)
 
 if not run_result:
-    print(f"￣\_(ツ)_/￣ There is no '{result_file_name}' in '{artifact_name}' artifact", file=sys.stderr)
+    print(f"￣\\_(ツ)_/￣ There is no '{result_file_name}' in '{artifact_name}' artifact", file=sys.stderr)
     sys.exit(0)
 
 print("✅ Printing workflow result", file=sys.stderr)
