@@ -166,7 +166,11 @@ def get_artifact_download_url(owner, repo, artifact_id, archive_format, token):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
-        download_url = response.headers.get("Location")
+        print(f"response.headers = {response.headers}", file=sys.stderr)
+        print(f"response.content = {response.content}", file=sys.stderr)
+        print(f"response.headers = {response.headers.get("Location:", "")}", file=sys.stderr)
+
+        download_url = response.headers.get("Location", "")
         return download_url
     except Exception as err:
         print(f"An error occurred: {err}", file=sys.stderr)
