@@ -65,6 +65,7 @@ const RequestSchema = z.object({
 });
 
 const app = express();
+app.use(express.json());
 
 app.post('/github-workflow-call', async (req, res) => {
     let request: callHandlerNamespace.Request | undefined;

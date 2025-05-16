@@ -20,9 +20,9 @@ export interface AuthConfig {
 }
 
 export enum CallType {
-    Trigger,
-    TriggerAndWait,
-    TriggerAndWaitResult,
+    Trigger = "Trigger",
+    TriggerAndWait = "TriggerAndWait",
+    TriggerAndWaitResult = "TriggerAndWaitResult",
 }
 
 export interface CallInput {
