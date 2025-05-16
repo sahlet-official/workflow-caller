@@ -159,7 +159,7 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
                 },
             });
 
-            console.log("✅ Workflow dispatched");
+            //console.log("✅ Workflow dispatched");
         } catch (error) {
             console.error("❌ Failed to dispatch workflow:", error);
 
