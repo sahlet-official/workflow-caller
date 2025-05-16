@@ -31,3 +31,6 @@ coverage/
 
 # Optional: ignore local .idea configs (WebStorm, etc)
 .idea/
+
+test_auth_config.json
+test.ts

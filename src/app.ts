@@ -1,194 +1,91 @@
-import express from 'express';
-import fs from 'fs';
-import path from "path";
-import unzipper from "unzipper";
-import { createAppAuth } from "@octokit/auth-app";
-import { Octokit } from "@octokit/rest";
-import { components } from "@octokit/openapi-types";
-import { v4 as uuidv4 } from 'uuid';
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import express, { response } from 'express';
+import { CallHandler } from './call-handler';
+import { CallHandlerInteractorImpl } from './call-handler-interactor';
+import * as callHandlerNamespace from './call-handler';
+import { z } from "zod";
 
-function readSecret(secretName: string): string {
-    try {
-        return fs.readFileSync(`/run/secrets/${secretName}`, 'utf8').trim();
-    } catch (error) {
-        console.error(`Failed to read secret ${secretName}`, error);
-        throw error;
+const port = process.env.PORT || "3000";
+const appId = process.env.GIT_HUB_APP_ID!;
+const OICDAudience = process.env.OICD_AUDIENCE_IDENTIFIER || "github_workflow_caller";
+const githubAppPrivateKeySecretName = process.env.GIT_HUB_APP_PRIVATE_KEY_SECRET_NAME || "github_app_private_key";
+const authConfigPath = process.env.AUTHORIZATION_CONFIG_PATH || "/app/auth_config.json";
+const defaultMaxWaitingTimeInSeconds = process.env.DEFAULT_MAX_WAITING_TIME_IN_SECONDS || "2700";
+
+const callHandlerInteractor = new CallHandlerInteractorImpl(
+    appId, OICDAudience, githubAppPrivateKeySecretName, authConfigPath
+);
+const callHandler = new CallHandler(callHandlerInteractor);
+
+class CallHandlerResponseImpl implements callHandlerNamespace.Response {
+    private expressResponse: any;
+
+    constructor(expressResponse: any) {
+        this.expressResponse = expressResponse;
     }
-}
 
-async function validateGitHubOICDToken(token: string, expectedAudience: string): Promise<Record<string, unknown>> {
-    //https://gal.hagever.com/posts/authenticating-github-actions-requests-with-github-openid-connect
-    const jwks = createRemoteJWKSet(
-        new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
-    );
-    const { payload } = await jwtVerify(token, jwks, {
-        audience: expectedAudience,
-        issuer: "https://token.actions.githubusercontent.com",
-    });
-    return payload;
-}
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const appId = process.env.GITHUB_APP_ID!;
-const privateKey = readSecret('github_app_private_key');
-const owner = "wansome-src";
-const repo = "pilot-gitops-oper";
-const workflowFile = "workflow-caller-test.yml";
-const branch = "main";
-
-async function run() {
-    const auth = createAppAuth({
-      appId,
-      privateKey,
-    });
-  
-    const appAuth = await auth({ type: "app" });
-  
-    const appOctokit = new Octokit({
-      auth: appAuth.token,
-    });
-  
-    // Получаем список установок GitHub App
-    const { data: installations } = await appOctokit.apps.listInstallations();
-    const installation = installations.find(i => i.account?.login === owner);
-
-    if (!installation) {
-        throw new Error(`No installation found for owner "${owner}"`);
-    }
-  
-    const installationAuth = await auth({
-      type: "installation",
-      installationId: installation.id,
-    });
-  
-    // Теперь используем Octokit с токеном установки
-    const octokit = new Octokit({
-      auth: installationAuth.token,
-    });
-
-    const uniqueId = uuidv4();
-    const timestamp = new Date().toISOString();
-
-    // Запускаем workflow
-    await octokit.actions.createWorkflowDispatch({
-      owner: owner,
-      repo: repo,
-      workflow_id: workflowFile,
-      ref: branch,
-      inputs: {
-        run_unique_id: uniqueId,
-        input1: "kek"
-      },
-    });
-  
-    console.log("✅ Workflow dispatched");
-
-    type WorkflowRun = components["schemas"]["workflow-run"];
-    let run: WorkflowRun | null = null;
-
-    for (let index = 0; index < 15; index++) {
-        // https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-workflow
-        const { data: runs } = await octokit.actions.listWorkflowRuns({
-            owner,
-            repo,
-            workflow_id: workflowFile,
-            created: `>=${timestamp}`,
+    noGroupPermission(): void {
+        return this.expressResponse.status(403).json({
+            error: 'noGroupPermission',
+            message: 'Group does not have the required permissions.',
         });
-        
-        const matchedRun = runs.workflow_runs.find(run => run.name?.includes(uniqueId));
-
-        if (matchedRun) {
-            run = matchedRun;
-            break;
-        }
-
-        await sleep(2000);
     }
 
-    if (!run) {
-        throw new Error("Cant find run");
-    }
-
-    for (let index = 0; index < 1800; index++) {
-        const { data: updatedRun } = await octokit.actions.getWorkflowRun({
-          owner,
-          repo,
-          run_id: run!.id,
+    error(info: any): void {
+        this.expressResponse.status(500).json({
+            error: true,
+            message: typeof info === 'string' ? info : info?.message || 'Unknown Error',
+            details: info,
         });
-    
-        if (updatedRun.status === "completed") {
-            run = updatedRun;
-            break;
-        }
-    
-        await sleep(4000);
     }
 
-    if (run.conclusion !== "success") {
-        console.error(`❌ Run failed: ${run.conclusion}`);
-        return;
+    success(result: any): void {
+        this.expressResponse.status(200).json(result);
     }
-
-    const { data: artifacts } = await octokit.actions.listWorkflowRunArtifacts({
-        owner,
-        repo,
-        run_id: run.id,
-    });
-
-    const targetArtifact = artifacts.artifacts.find(a => a.name === "result");
-
-    if (!targetArtifact) {
-        console.error("❌ Artifact 'result' not found");
-        return;
-    }
-
-    const downloadResponse = await octokit.actions.downloadArtifact({
-        owner,
-        repo,
-        artifact_id: targetArtifact.id,
-        archive_format: "zip",
-    });
-    
-    const downloadUrl = (downloadResponse as { url: string }).url;
-
-    const zipPath = path.join(__dirname, "result.zip");
-    const res = await fetch(downloadUrl);
-    const arrayBuffer = await res.arrayBuffer();
-    await fs.promises.writeFile(zipPath, Buffer.from(arrayBuffer));
-
-    await fs
-        .createReadStream(zipPath)
-        .pipe(unzipper.Extract({ path: path.join(__dirname, "artifact") }))
-        .promise();
-
-    const resultJsonPath = path.join(__dirname, "artifact", "result.json");
-    const content = fs.readFileSync(resultJsonPath, "utf8");
-    const parsed = JSON.parse(content);
-
-    console.log("✅ Artifact result:", parsed);
 }
 
-const app = express();
-const port = process.env.PORT!;
-const OICDAudience = process.env.OICD_AUDIENCE_IDENTIFIER!;
-
-app.post('/', async (req, res) => {
-    const body = req.body;
-    if (await validateGitHubOICDToken(body.token, "OICDAudience")) {
-        await run().catch(console.error);
-        res.send('OK');
-    } else {
-        res.send('NOT OK');
-        res.status(401).json({ error: "Unauthorized", message: "NOT OK" });
-    }
+const CallAddressSchema = z.object({
+    owner: z.string(),
+    repo: z.string(),
+    workflowFile: z.string(),
+    ref: z.string(),
 });
 
-// app.get('/', async (req, res) => {
-//     await run().catch(console.error);
-//     res.send(`Hello World!`);
-// });
+const CallInputSchema = z.object({
+    input: z.any(),
+    callType: z.nativeEnum(callHandlerNamespace.CallType),
+    callAddress: CallAddressSchema,
+    maxWaitingTimeInSeconds: z.number()
+    .min(30, { message: "maxWaitingTimeInSeconds must be at least 30" })
+    .default(Number(defaultMaxWaitingTimeInSeconds)),
+});
+
+const RequestSchema = z.object({
+    token: z.string(),
+    callInput: CallInputSchema,
+});
+
+const app = express();
+
+app.post('/github-workflow-call', async (req, res) => {
+    let request: callHandlerNamespace.Request | undefined;
+
+    {
+        const parseResult = RequestSchema.safeParse(req.body);
+
+        if (!parseResult.success) {
+            res.status(400).send("Invalid request");
+            return;
+        }
+
+        const requestBody = parseResult.data;
+
+        request = requestBody as callHandlerNamespace.Request;
+    }
+
+    const response = new CallHandlerResponseImpl(res);
+
+    callHandler.call(request, response);
+});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

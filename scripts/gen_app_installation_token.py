@@ -105,14 +105,14 @@ def get_installation_token(encoded_jwt, installation_id):
 
 OWNER_NAME = os.environ.get("OWNER_NAME")
 REPO_NAME = os.environ.get("REPO_NAME")
-APP_PRIVATE_KEY = os.environ.get("APP_PRIVATE_KEY")
-APP_ID = os.environ.get("APP_ID")
+GIT_HUB_APP_PRIVATE_KEY = os.environ.get("GIT_HUB_APP_PRIVATE_KEY")
+GIT_HUB_APP_ID = os.environ.get("GIT_HUB_APP_ID")
 
-if not all([OWNER_NAME, APP_PRIVATE_KEY, APP_ID]):
+if not all([OWNER_NAME, GIT_HUB_APP_PRIVATE_KEY, GIT_HUB_APP_ID]):
     print("Error: Missing required environment variables.", file=sys.stderr)
     sys.exit(1)
 
-encoded_jwt = gen_github_app_jwt(APP_PRIVATE_KEY, APP_ID)
+encoded_jwt = gen_github_app_jwt(GIT_HUB_APP_PRIVATE_KEY, GIT_HUB_APP_ID)
 
 if not encoded_jwt:
     print("encoded_jwt=null", file=sys.stderr)

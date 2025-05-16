@@ -44,7 +44,7 @@ def get_timestamp():
     return timestamp
 
 # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
-def trigger_workflow_dispatch(owner, repo, workflow_file, branch, workflow_input_json, token):
+def trigger_workflow_dispatch(owner, repo, workflow_file, ref, workflow_input_json, token):
     url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_file}/dispatches"
 
     headers = {
@@ -54,7 +54,7 @@ def trigger_workflow_dispatch(owner, repo, workflow_file, branch, workflow_input
     }
 
     data = {
-        "ref": branch,
+        "ref": ref,
         "inputs": json.loads(workflow_input_json)
     }
 
@@ -68,13 +68,13 @@ def trigger_workflow_dispatch(owner, repo, workflow_file, branch, workflow_input
         return None
 
 # https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-workflow
-def find_run_by_run_unique_id(owner, repo, workflow_file, branch, run_unique_id, timestamp, token):
+def find_run_by_run_unique_id(owner, repo, workflow_file, run_unique_id, timestamp, token):
     operator = ">="
     encoded_created = quote(f"{operator}{timestamp}")
 
     url = (
         f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/"
-        f"{workflow_file}/runs?branch={branch}&created={encoded_created}"
+        f"{workflow_file}/runs?created={encoded_created}"
     )
 
     headers = {
@@ -212,11 +212,11 @@ INSTALLATION_TOKEN = os.environ.get("INSTALLATION_TOKEN")
 OWNER_NAME = os.environ.get("OWNER_NAME")
 REPO_NAME = os.environ.get("REPO_NAME")
 WORKFLOW_FILENAME = os.environ.get("WORKFLOW_FILENAME")
-BRANCH_NAME = os.environ.get("BRANCH_NAME")
+REF_NAME = os.environ.get("REF_NAME")
 
 # --------------------------------------------------------
 
-if not all([WORKFLOW_INPUT_JSON, INSTALLATION_TOKEN, OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, BRANCH_NAME]):
+if not all([WORKFLOW_INPUT_JSON, INSTALLATION_TOKEN, OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, REF_NAME]):
     print("Error: Missing required environment variables.", file=sys.stderr)
     sys.exit(1)
 
@@ -236,7 +236,7 @@ if not run_unique_id:
 
 timestamp = get_timestamp()
 
-if not trigger_workflow_dispatch(OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, BRANCH_NAME, WORKFLOW_INPUT_JSON, INSTALLATION_TOKEN):
+if not trigger_workflow_dispatch(OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, REF_NAME, WORKFLOW_INPUT_JSON, INSTALLATION_TOKEN):
     print("❌ Couldn't trigger workflow dispatch", file=sys.stderr)
     sys.exit(1)
 
@@ -244,7 +244,7 @@ print("✅ Workflow dispatched", file=sys.stderr)
 
 # --------------------------------------------------------
 
-run = find_run_by_run_unique_id(OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, BRANCH_NAME, run_unique_id, timestamp, INSTALLATION_TOKEN)
+run = find_run_by_run_unique_id(OWNER_NAME, REPO_NAME, WORKFLOW_FILENAME, run_unique_id, timestamp, INSTALLATION_TOKEN)
 
 if not run:
     print("❌ Cant find run", file=sys.stderr)

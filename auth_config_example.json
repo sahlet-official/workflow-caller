@@ -1,0 +1,24 @@
+{
+    "permissionsRecords" : {
+        "org/repo0": {
+            "permissions": [
+                {
+                    "callAddress": {
+                        "owner": "org",
+                        "repo": "repo1",
+                        "workflowFile": "workflow.yml",
+                        "ref": "main"
+                    }
+                },
+                {
+                    "callAddress": {
+                        "owner": "org",
+                        "repo": "repo2",
+                        "workflowFile": "playMe.yml",
+                        "ref": "dev"
+                    }
+                }
+            ]
+        }
+    }
+}
