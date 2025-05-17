@@ -48,6 +48,11 @@ jobs:
       - name: Save Docker image to .tar
         run: docker save workflow-caller -o workflow-caller.tar
 
+      - name: Set git user
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
       - name: Create Git tags
         run: |
           git tag -a v${{ github.event.inputs.version }} -m "Release v${{ github.event.inputs.version }}"
