@@ -42,11 +42,8 @@ jobs:
       #     git pull --rebase
       #     git push origin HEAD
 
-      # - name: Build Docker image
-      #   run: docker build -t workflow-caller -f Dockerfile .
-
       - name: Build Docker image
-        run: docker-compose -f docker-compose.yml build workflow-caller
+        run: docker build -t workflow-caller -f Dockerfile .
 
       - name: Save Docker image to .tar
         run: docker save workflow-caller -o workflow-caller.tar
