@@ -37,7 +37,8 @@ jobs:
         # run: docker build -t workflow-caller -f Dockerfile .
         # run: DOCKER_BUILDKIT=1 docker buildx build --no-cache --platform linux/arm64 -t workflow-caller:arm64 -f Dockerfile .
         # run: DOCKER_BUILDKIT=1 docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
-        run: docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
+        # run: docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
+        run: docker buildx build --output type=oci,dest=image-dir --provenance=false --tag workflow-caller -f Dockerfile .
         working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Save Docker image to .tar
@@ -67,13 +68,21 @@ jobs:
           git push --force origin latest
         working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: v${{ github.event.inputs.version }}
+      #     name: Release v${{ github.event.inputs.version }}
+      #     generate_release_notes: true
+      #     files: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}/workflow-caller.tar.gz
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
-          files: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}/workflow-caller.tar.gz
+          files: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}/image-dir
 
       - name: Cleanup
         if: always() && steps.create_wd.outcome == 'success'
