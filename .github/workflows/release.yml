@@ -43,13 +43,13 @@ jobs:
             docker buildx build --output type=oci,dest=image-dir --provenance=false --tag workflow-caller -f Dockerfile .
         working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
-      - name: Save Docker image to .tar
-        run: docker save workflow-caller -o workflow-caller.tar
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
+      # - name: Save Docker image to .tar
+      #   run: docker save workflow-caller -o workflow-caller.tar
+      #   working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
-      - name: Compress Docker image
-        run: gzip workflow-caller.tar
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
+      # - name: Compress Docker image
+      #   run: gzip workflow-caller.tar
+      #   working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Set git user
         run: |
