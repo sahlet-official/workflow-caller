@@ -38,7 +38,9 @@ jobs:
         # run: DOCKER_BUILDKIT=1 docker buildx build --no-cache --platform linux/arm64 -t workflow-caller:arm64 -f Dockerfile .
         # run: DOCKER_BUILDKIT=1 docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
         # run: docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
-        run: docker buildx build --output type=oci,dest=image-dir --provenance=false --tag workflow-caller -f Dockerfile .
+        run: |
+            docker buildx create --name rawbuilder --driver docker-container --use &&
+            docker buildx build --output type=oci,dest=image-dir --provenance=false --tag workflow-caller -f Dockerfile .
         working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Save Docker image to .tar
