@@ -18,6 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check Docker version
+        run: |
+          docker version
+          docker buildx version
+
       - name: Build Docker image
         # run: docker build -t workflow-caller -f Dockerfile .
         # run: DOCKER_BUILDKIT=1 docker buildx build --no-cache --platform linux/arm64 -t workflow-caller:arm64 -f Dockerfile .
