@@ -14,30 +14,44 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    env:
+      WORK_FOLDER: work-folder-12345
+      REPO_FOLDER: repo
+
     steps:
+      - name: Creating work folder
+        id: create_wd
+        run: mkdir "$WORK_FOLDER"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
-      - name: Check Docker version
-        run: |
-          docker version
-          docker buildx version
+      # - name: Check Docker version
+      #   run: |
+      #     docker version
+      #     docker buildx version
 
       - name: Build Docker image
         # run: docker build -t workflow-caller -f Dockerfile .
         # run: DOCKER_BUILDKIT=1 docker buildx build --no-cache --platform linux/arm64 -t workflow-caller:arm64 -f Dockerfile .
         run: DOCKER_BUILDKIT=1 docker build --compress --no-cache --tag workflow-caller -f Dockerfile .
+        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Save Docker image to .tar
         run: docker save workflow-caller -o workflow-caller.tar
+        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Compress Docker image
         run: gzip workflow-caller.tar
+        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Set git user
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Create Git tags
         run: |
@@ -50,6 +64,7 @@ jobs:
           git fetch origin --tags
           git tag -f latest -m "Release v${{ github.event.inputs.version }}"
           git push --force origin latest
+        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -57,4 +72,8 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
-          files: workflow-caller.tar.gz
+          files: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}/workflow-caller.tar.gz
+
+      - name: Cleanup
+        if: always() && steps.create_wd.outcome == 'success'
+        run: rm -r "$WORK_FOLDER"
