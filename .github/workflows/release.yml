@@ -28,12 +28,16 @@ jobs:
             --platform=linux/arm64 \
             -f Dockerfile .
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload to GHCR
         env:
           REPO_OWNER: ${{ github.repository_owner }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$REPO_OWNER" --password-stdin
           docker tag workflow-caller:arm64 ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
           docker push ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
 
