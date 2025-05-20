@@ -21,11 +21,21 @@ jobs:
       - name: Build Docker image
         run: |
           docker buildx create --name mybuilder --driver docker-container --use &&
-          docker buildx build --output=type=docker,dest=workflow-caller_arm64.tar \
+          # docker buildx build --output=type=docker,dest=workflow-caller_arm64.tar \
+          docker buildx build --output=type=docker \
             --provenance=false \
             --tag workflow-caller:arm64 \
             --platform=linux/arm64 \
             -f Dockerfile .
+
+      - name: Upload to GHCR
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$REPO_OWNER" --password-stdin
+          docker tag workflow-caller ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
+          docker push ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
 
       - name: Compress Docker image
         run: gzip workflow-caller_arm64.tar
@@ -53,4 +63,4 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
-          files: workflow-caller_arm64.tar.gz
+          # files: workflow-caller_arm64.tar.gz
