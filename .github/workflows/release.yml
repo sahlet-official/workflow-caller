@@ -19,12 +19,12 @@ jobs:
       REPO_FOLDER: repo
 
     steps:
-      - name: ls
-        run: ls
-
       - name: Creating work folder
         id: create_wd
         run: mkdir "$WORK_FOLDER"
+
+      - name: ls
+        run: ls
 
       - name: Checkout repository
         uses: actions/checkout@v4
