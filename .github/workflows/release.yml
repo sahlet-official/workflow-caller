@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$REPO_OWNER" --password-stdin
-          docker tag workflow-caller ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
+          docker tag workflow-caller:arm64 ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
           docker push ghcr.io/"$REPO_OWNER"/workflow-caller:arm64
 
       - name: Compress Docker image
