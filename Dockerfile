@@ -1,38 +1,29 @@
-# FROM node:23-alpine AS builder
+# Build
+# https://hub.docker.com/layers/library/node/23-alpine/images/sha256-a6399af5418a73b9483a8d374964ce1dfc70e8c51664f22149868f1feccfa5c2
+FROM node@sha256:a6399af5418a73b9483a8d374964ce1dfc70e8c51664f22149868f1feccfa5c2 AS builder
 
-# WORKDIR /app
+WORKDIR /app
 
-# COPY package*.json ./
-# RUN npm ci
+COPY package*.json ./
+RUN npm ci
 
-# COPY tsconfig.json ./
-# COPY src ./src
+COPY tsconfig.json ./
+COPY src ./src
 
-# RUN npm run build
+RUN npm run build
 
 # Setup
-# FROM node:23-alpine
-# FROM --platform=linux/arm64 node:23-alpine
-
-# FROM node@sha256:a6399af5418a73b9483a8d374964ce1dfc70e8c51664f22149868f1feccfa5c2
-# FROM node@sha256:be56e91681a8ec1bba91e3006039bd228dc797fd984794a3efedab325b36e679
-# amd
-# FROM node@sha256:169ee1b69bd3f5c7c8508a9919e8b367bba9dc7fa9a03097ec9f85d2e8179631
-# arm
+# https://hub.docker.com/layers/library/node/23-alpine/images/sha256-a6399af5418a73b9483a8d374964ce1dfc70e8c51664f22149868f1feccfa5c2
 FROM node@sha256:a6399af5418a73b9483a8d374964ce1dfc70e8c51664f22149868f1feccfa5c2
-# FROM alpine:latest
 
-# WORKDIR /app
+WORKDIR /app
 
-# COPY package*.json ./
-# RUN npm ci --omit=dev && \
-#     npm cache clean --force && \
-#     rm -rf /usr/share/man /usr/share/doc /var/cache/apk/*
+COPY package*.json ./
 
-# RUN npm ci --omit=dev --production && npm cache clean --force 
-# RUN rm -rf /usr/share/man /usr/share/doc /var/cache/apk/*
+RUN npm ci --omit=dev --production && npm cache clean --force 
+RUN rm -rf /usr/share/man /usr/share/doc /var/cache/apk/*
 
-# COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist ./dist
 
-# # Run command
-# CMD ["node", "dist/app.js"]
+# Run command
+CMD ["node", "dist/app.js"]

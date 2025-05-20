@@ -1,5 +1,6 @@
 # Stage 1: Development image
-FROM node:23-alpine
+# https://hub.docker.com/layers/library/node/23-alpine/images/sha256-169ee1b69bd3f5c7c8508a9919e8b367bba9dc7fa9a03097ec9f85d2e8179631
+FROM node@sha256:139be64e98a1374a1c49ee62b23a91f688a37a628422ff8bb9fba94185678ab3
 
 WORKDIR /app
 
