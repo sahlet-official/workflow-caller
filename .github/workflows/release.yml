@@ -14,22 +14,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    env:
-      WORK_FOLDER: work-folder-12345
-      REPO_FOLDER: repo
-
     steps:
-      - name: Creating work folder
-        id: create_wd
-        run: mkdir "$WORK_FOLDER"
-
-      - name: ls
-        run: ls
-
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Build Docker image
         run: |
@@ -39,17 +26,14 @@ jobs:
             --tag workflow-caller:arm64 \
             --platform=linux/arm64 \
             -f Dockerfile .
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Compress Docker image
         run: gzip workflow-caller_arm64.tar
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Set git user
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Create Git tags
         run: |
@@ -62,7 +46,6 @@ jobs:
           git fetch origin --tags
           git tag -f latest -m "Release v${{ github.event.inputs.version }}"
           git push --force origin latest
-        working-directory: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -70,8 +53,4 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
-          files: ${{ env.WORK_FOLDER }}/${{ env.REPO_FOLDER }}/workflow-caller_arm64.tar.gz
-
-      - name: Cleanup
-        if: always() && steps.create_wd.outcome == 'success'
-        run: rm -r "$WORK_FOLDER"
+          files: workflow-caller_arm64.tar.gz
