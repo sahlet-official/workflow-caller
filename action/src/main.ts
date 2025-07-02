@@ -60,7 +60,7 @@ async function makeCall(
     throw new Error(`
       Error:
       HTTP status: ${response.status},
-      details: ${result}
+      details: ${JSON.stringify(result, null, 2)}
     `);
   }
 
