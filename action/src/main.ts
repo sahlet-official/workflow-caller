@@ -52,7 +52,7 @@ async function makeCall(
     throw new Error(`
       Error:
       cant get json from response,
-      details: ${error}
+      details: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}
     `);
   }
 
