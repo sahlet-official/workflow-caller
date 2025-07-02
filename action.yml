@@ -40,4 +40,4 @@ outputs:
     description: "Output result of called workflow (applied only for TriggerAndWaitResult call_type) (workflow has to create result artifact - check out Readme for details)"
 runs:
   using: "node20"
-  main: "dist/index.js"
+  main: "action/dist/index.js"
