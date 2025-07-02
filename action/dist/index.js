@@ -25720,14 +25720,14 @@ async function makeCall(oidc_token, address, owner, repo, workflow, ref, input, 
         throw new Error(`
       Error:
       cant get json from response,
-      details: ${error}
+      details: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}
     `);
     }
     if (!response.ok) {
         throw new Error(`
       Error:
       HTTP status: ${response.status},
-      details: ${result}
+      details: ${JSON.stringify(result, null, 2)}
     `);
     }
     return result;
