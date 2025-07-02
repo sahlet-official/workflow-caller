@@ -79,7 +79,7 @@ app.post('/github-workflow-call', async (req, res) => {
         if (!parseResult.success) {
             res.status(400).json({
                 error: 'Bad Request',
-                message: 'Invalid request',
+                message: parseResult.error.format(),
             })
             return;
         }
