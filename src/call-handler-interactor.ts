@@ -28,11 +28,11 @@ async function validateGitHubOICDToken(token: string, expectedAudience: string):
 
 // -----------------------------------------------------
 
-function readSecret(secretName: string): string {
+function readFile(filePath: string): string {
     try {
-        return fs.readFileSync(`/run/secrets/${secretName}`, 'utf8').trim();
+        return fs.readFileSync(filePath, 'utf8').trim();
     } catch (error) {
-        console.error(`Failed to read secret ${secretName}`, error);
+        console.error(`Failed to read file ${filePath}`, error);
         throw error;
     }
 }
@@ -41,9 +41,9 @@ function readSecret(secretName: string): string {
 
 export class CallHandlerInteractorImpl implements CallHandlerInteractor {
     constructor(
-        private appId: string,
+        private githubAppIdFilePath: string,
+        private githubAppPrivateKeyFilePath: string,
         private OICDAudience: string,
-        private githubAppPrivateKeySecretName: string,
         private authConfigPath: string
     ) {}
 
@@ -93,8 +93,8 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
 
     async call(callInput: CallInput): Promise<any> {
         const auth = createAppAuth({
-            appId: this.appId,
-            privateKey: readSecret(this.githubAppPrivateKeySecretName),
+            appId: readFile(this.githubAppIdFilePath),
+            privateKey: readFile(this.githubAppPrivateKeyFilePath),
         });
     
         const appAuth = await auth({ type: "app" });

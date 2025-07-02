@@ -1,13 +1,13 @@
 services:
   workflow-caller:
     image: workflow-caller
-    container_name: release
+    container_name: workflow-caller-release
     environment:
       PORT: ${INTERNAL_PORT}
       NODE_ENV: production
-      GIT_HUB_APP_ID: ${WORKFLOW_CALL_GITHUB_APP_ID}
+      GIT_HUB_APP_ID_PATH: /app/secrets/github_appid
+      GIT_HUB_APP_PRIVATE_KEY_PATH: /app/secrets/github_app_private_key
       OICD_AUDIENCE_IDENTIFIER: ${WORKFLOW_CALL_OICD_AUDIENCE_IDENTIFIER}
-      GIT_HUB_APP_PRIVATE_KEY_SECRET_NAME: github_app_private_key
       AUTHORIZATION_CONFIG_PATH: ${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_INTERNAL}
     volumes:
       - ${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_EXTERNAL}:${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_INTERNAL}:ro
@@ -17,16 +17,19 @@ services:
     ports:
       - "${EXTERNAL_PORT}:${INTERNAL_PORT}"
     secrets:
-      - github_app_private_key
+      - source: github_appid
+        target: /app/secrets/github_appid
+      - source: github_app_private_key
+        target: /app/secrets/github_app_private_key
   workflow-caller-debug:
     image: workflow-caller-debug
-    container_name: debug
+    container_name: workflow-caller-debug
     environment:
       PORT: ${INTERNAL_PORT}
       NODE_ENV: development
-      GIT_HUB_APP_ID: ${WORKFLOW_CALL_GITHUB_APP_ID}
+      GIT_HUB_APP_ID_PATH: /app/secrets/github_appid
+      GIT_HUB_APP_PRIVATE_KEY_PATH: /app/secrets/github_app_private_key
       OICD_AUDIENCE_IDENTIFIER: ${WORKFLOW_CALL_OICD_AUDIENCE_IDENTIFIER}
-      GIT_HUB_APP_PRIVATE_KEY_SECRET_NAME: github_app_private_key
       AUTHORIZATION_CONFIG_PATH: ${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_INTERNAL}
     volumes:
       - ${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_EXTERNAL}:${WORKFLOW_CALL_AUTHORIZATION_CONFIG_PATH_INTERNAL}:ro
@@ -37,8 +40,13 @@ services:
       - "${EXTERNAL_PORT}:${INTERNAL_PORT}"
       - "${EXTERNAL_DEBUG_PORT}:9229"
     secrets:
-      - github_app_private_key
+      - source: github_appid
+        target: /app/secrets/github_appid
+      - source: github_app_private_key
+        target: /app/secrets/github_app_private_key
 
 secrets:
+  github_appid:
+    file: ${WORKFLOW_CALL_GITHUB_APP_ID_PATH}
   github_app_private_key:
     file: ${WORKFLOW_CALL_GITHUB_APP_PRIVATE_KEY_PATH}

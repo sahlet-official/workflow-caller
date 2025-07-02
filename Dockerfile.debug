@@ -12,6 +12,10 @@ COPY ./src ./src
 
 RUN npm install -g ts-node typescript
 
+RUN adduser -u 1001 -D nonroot
+RUN chown -R nonroot:nonroot /app
+USER nonroot
+
 EXPOSE 3000
 EXPOSE 9229
 

@@ -5,14 +5,17 @@ import * as callHandlerNamespace from './call-handler';
 import { z } from "zod";
 
 const port = process.env.PORT || "3000";
-const appId = process.env.GIT_HUB_APP_ID!;
+const githubAppIdFilePath = process.env.GIT_HUB_APP_ID_PATH!;
+const githubAppPrivateKeyFilePath = process.env.GIT_HUB_APP_PRIVATE_KEY_PATH!;
 const OICDAudience = process.env.OICD_AUDIENCE_IDENTIFIER || "github_workflow_caller";
-const githubAppPrivateKeySecretName = process.env.GIT_HUB_APP_PRIVATE_KEY_SECRET_NAME || "github_app_private_key";
 const authConfigPath = process.env.AUTHORIZATION_CONFIG_PATH || "/app/auth_config.json";
 const defaultMaxWaitingTimeInSeconds = process.env.DEFAULT_MAX_WAITING_TIME_IN_SECONDS || "2700";
 
 const callHandlerInteractor = new CallHandlerInteractorImpl(
-    appId, OICDAudience, githubAppPrivateKeySecretName, authConfigPath
+    githubAppIdFilePath,
+    githubAppPrivateKeyFilePath,
+    OICDAudience,
+    authConfigPath
 );
 const callHandler = new CallHandler(callHandlerInteractor);
 

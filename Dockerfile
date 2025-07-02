@@ -20,8 +20,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --omit=dev --production && npm cache clean --force 
+RUN npm ci --omit=dev --production && npm cache clean --force
 RUN rm -rf /usr/share/man /usr/share/doc /var/cache/apk/*
+
+RUN adduser -u 1001 -D nonroot
+RUN chown -R nonroot:nonroot /app
+USER nonroot
 
 COPY --from=builder /app/dist ./dist
 
