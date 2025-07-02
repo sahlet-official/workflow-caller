@@ -21,7 +21,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          # docker buildx create --name mybuilder --driver docker-container --use &&
+          docker buildx create --name mybuilder --driver docker-container --use &&
           # docker buildx build --output=type=docker,dest=workflow-caller_arm64.tar \
           docker buildx build --output=type=docker \
             --provenance=false \
