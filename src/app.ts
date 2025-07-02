@@ -7,14 +7,14 @@ import { z } from "zod";
 const port = process.env.PORT || "3000";
 const githubAppIdFilePath = process.env.GIT_HUB_APP_ID_PATH!;
 const githubAppPrivateKeyFilePath = process.env.GIT_HUB_APP_PRIVATE_KEY_PATH!;
-const OICDAudience = process.env.OICD_AUDIENCE_IDENTIFIER || "github_workflow_caller";
+const OIDCAudience = process.env.OIDC_AUDIENCE_IDENTIFIER || "github_workflow_caller";
 const authConfigPath = process.env.AUTHORIZATION_CONFIG_PATH || "/app/auth_config.json";
 const defaultMaxWaitingTimeInSeconds = process.env.DEFAULT_MAX_WAITING_TIME_IN_SECONDS || "2700";
 
 const callHandlerInteractor = new CallHandlerInteractorImpl(
     githubAppIdFilePath,
     githubAppPrivateKeyFilePath,
-    OICDAudience,
+    OIDCAudience,
     authConfigPath
 );
 const callHandler = new CallHandler(callHandlerInteractor);

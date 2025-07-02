@@ -14,7 +14,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // -----------------------------------------------------
 
-async function validateGitHubOICDToken(token: string, expectedAudience: string): Promise<Record<string, unknown>> {
+async function validateGitHubOIDCToken(token: string, expectedAudience: string): Promise<Record<string, unknown>> {
     //https://gal.hagever.com/posts/authenticating-github-actions-requests-with-github-openid-connect
     const jwks = createRemoteJWKSet(
         new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
@@ -43,7 +43,7 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
     constructor(
         private githubAppIdFilePath: string,
         private githubAppPrivateKeyFilePath: string,
-        private OICDAudience: string,
+        private OIDCAudience: string,
         private authConfigPath: string
     ) {}
 
@@ -51,7 +51,7 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
     async validateToken(token: string): Promise<boolean> {
         // TODO: make own jwt and it's validation
         try {
-            await validateGitHubOICDToken(token, this.OICDAudience);
+            await validateGitHubOIDCToken(token, this.OIDCAudience);
             return true;
         } catch (err) {
             if (err instanceof Error && 'code' in err) {
@@ -79,7 +79,7 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
         // it can be implemented in the way that from one token it can be made several groups,
         // and then for any group searching corresponded permission
         try {
-            const payload = await validateGitHubOICDToken(token, this.OICDAudience);
+            const payload = await validateGitHubOIDCToken(token, this.OIDCAudience);
             // https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect
             const res: GroupInfo[] = [{
                 uniqueGroupName: payload.repository as string
@@ -120,7 +120,7 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
             if (!installation) {
                 ({ data: installation } = await appOctokit.apps.getUserInstallation({
                     username: callInput.callAddress.owner
-                })); 
+                }));
             }
 
             if (!installation) {

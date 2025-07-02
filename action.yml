@@ -1,0 +1,43 @@
+name: "Workflow Caller"
+description: "Implements workflow call with 'workflow-caller' github app"
+inputs:
+  address:
+    description: "Web address"
+    required: true
+  owner:
+    description: "Name of owner of repo where you are calling the workflow (organization or user)"
+    required: true
+  repo:
+    description: "Repo name where you are calling the workflow"
+    required: true
+  workflow:
+    description: "Workflow filename of workflow that you are calling"
+    required: true
+  ref:
+    description: "Git reference of workflow (branch/tag)"
+    required: true
+  oidc_token:
+    description: "OIDC token for caller action - needed for authentication, can be empty - then action generates it, then it needs permission id-token - write"
+    default: ""
+  oidc_audience:
+    description: "Used if oidc_token is empty. If not set - then address will be used as audience."
+    default: ""
+  input:
+    description: "JSON with input params for called workflow"
+    default: ""
+  call_type:
+    description: "one of: Trigger / TriggerAndWait / TriggerAndWaitResult"
+    default: "Trigger"
+  max_wait_time:
+    description: "maximum waiting time in seconds until called workflow will finish"
+    default: "2700"
+  fail_on_error:
+    description: "If there is some error - fail an action. Values: true/false"
+    required: true
+    default: "true"
+outputs:
+  result:
+    description: "Output result of called workflow (applied only for TriggerAndWaitResult call_type) (workflow has to create result artifact - check out Readme for details)"
+runs:
+  using: "node20"
+  main: "dist/index.js"

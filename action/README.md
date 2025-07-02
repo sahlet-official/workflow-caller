@@ -1,0 +1,1 @@
+In this folder you can find implementation of GitHub Action that calls workflow-caller API.
