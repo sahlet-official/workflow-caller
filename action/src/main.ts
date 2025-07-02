@@ -44,15 +44,27 @@ async function makeCall(
     }),
   });
 
+  let result: string;
+
+  try {
+    result = await response.json();
+  } catch (error) {
+    throw new Error(`
+      Error:
+      cant get json from response,
+      details: ${error}
+    `);
+  }
+
   if (!response.ok) {
     throw new Error(`
       Error:
       HTTP status: ${response.status},
-      details ${response.json()}
+      details: ${result}
     `);
   }
 
-  return await response.json();
+  return result;
 }
 
 async function run() {
