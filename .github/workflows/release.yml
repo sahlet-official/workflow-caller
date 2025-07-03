@@ -61,14 +61,12 @@ jobs:
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
           docker buildx create --name mybuilder --driver docker-container --use &&
+          BUILDKIT_COMPRESSION=gzip \
           docker buildx build --output=type=registry \
             --provenance=false \
             --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
             --platform=linux/arm64 \
-            -f Dockerfile \
-            .
-            # --push \
-            # .
+            -f Dockerfile .
 
       - name: Create Git tags
         run: |
