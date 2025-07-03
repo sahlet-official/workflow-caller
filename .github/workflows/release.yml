@@ -19,15 +19,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build and push Docker image
         run: |
           docker buildx create --name mybuilder --driver docker-container --use &&
-          # docker buildx build --output=type=docker,dest=workflow-caller_arm64.tar \
-          docker buildx build --output=type=docker \
+          docker buildx build --output=type=registry \
             --provenance=false \
-            --tag workflow-caller:arm64 \
+            --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
             --platform=linux/arm64 \
-            -f Dockerfile .
+            -f Dockerfile \
+            .
+            # --push \
+            # .
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,16 +68,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Docker image to GHCR
-        env:
-          REPO_OWNER: ${{ github.repository_owner }}
-        run: |
-          docker tag "workflow-caller:arm64" "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}"
-          docker push "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}"
-
-      # - name: Compress Docker image
-      #   run: gzip workflow-caller_arm64.tar
-
       - name: Create Git tags
         run: |
           git tag -a v${{ github.event.inputs.version }} -m "Release v${{ github.event.inputs.version }}"
@@ -94,4 +86,3 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
-          # files: workflow-caller_arm64.tar.gz
