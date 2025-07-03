@@ -25742,7 +25742,7 @@ async function run() {
     const oidc_audience = core.getInput('oidc_audience');
     const input = core.getInput('input');
     const call_type = core.getInput('call_type');
-    const max_wait_time = core.getInput('max_wait_time');
+    const max_wait_time = Number(core.getInput('max_wait_time'));
     const fail_on_error = core.getInput('fail_on_error') === 'true' ? true :
         (core.getInput('fail_on_error') === 'false' ? false : 'unknown');
     if (fail_on_error === 'unknown') {
