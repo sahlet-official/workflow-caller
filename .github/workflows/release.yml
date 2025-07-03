@@ -15,9 +15,18 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    env:
+      WORK_FOLDER: work-folder-very-unique-name
+
     steps:
+      - name: Creating work folder
+        id: create_wd
+        run: mkdir "$WORK_FOLDER"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: ${{ env.WORK_FOLDER }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,28 +35,30 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: action
+        working-directory: ${{ env.WORK_FOLDER }}/action
 
       - name: Build with ncc
         run: npm run prepare
-        working-directory: action
+        working-directory: ${{ env.WORK_FOLDER }}/action
 
       - name: Set git user
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+        working-directory: ${{ env.WORK_FOLDER }}
 
       - name: Commit dist
         run: |
           git add dist
           git commit -m "chore: build for release v${{ github.event.inputs.version }}" || echo "No changes to commit"
-        working-directory: action
+        working-directory: ${{ env.WORK_FOLDER }}/action
 
       - name: Sync and Push Commit
         run: |
           git fetch origin
           git pull --rebase
           git push origin HEAD
+        working-directory: ${{ env.WORK_FOLDER }}
 
       - name: Set Docker Login info
         uses: docker/login-action@v3
@@ -62,11 +73,18 @@ jobs:
         run: |
           docker buildx create --name mybuilder --driver docker-container --use &&
           BUILDKIT_COMPRESSION=gzip \
-          docker buildx build --output=type=registry \
+          docker buildx build --output=type=image,push=true \
             --provenance=false \
             --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
             --platform=linux/arm64 \
             -f Dockerfile .
+          # BUILDKIT_COMPRESSION=gzip \
+          # docker buildx build --output=type=registry \
+          #   --provenance=false \
+          #   --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
+          #   --platform=linux/arm64 \
+          #   -f Dockerfile .
+        working-directory: ${{ env.WORK_FOLDER }}
 
       - name: Create Git tags
         run: |
@@ -79,6 +97,7 @@ jobs:
           git fetch origin --tags
           git tag -f latest -m "Release v${{ github.event.inputs.version }}"
           git push --force origin latest
+        working-directory: ${{ env.WORK_FOLDER }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -86,3 +105,7 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           name: Release v${{ github.event.inputs.version }}
           generate_release_notes: true
+
+      - name: Cleanup
+        if: always() && steps.create_wd.outcome == 'success'
+        run: rm -r "$WORK_FOLDER"
