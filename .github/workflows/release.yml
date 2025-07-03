@@ -19,20 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build and push Docker image
-        env:
-          REPO_OWNER: ${{ github.repository_owner }}
-        run: |
-          docker buildx create --name mybuilder --driver docker-container --use &&
-          docker buildx build --output=type=registry \
-            --provenance=false \
-            --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
-            --platform=linux/arm64 \
-            -f Dockerfile \
-            .
-            # --push \
-            # .
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -69,6 +55,20 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          docker buildx create --name mybuilder --driver docker-container --use &&
+          docker buildx build --output=type=registry \
+            --provenance=false \
+            --tag "ghcr.io/${REPO_OWNER}/workflow-caller:arm64_v${{ github.event.inputs.version }}" \
+            --platform=linux/arm64 \
+            -f Dockerfile \
+            .
+            # --push \
+            # .
 
       - name: Create Git tags
         run: |
