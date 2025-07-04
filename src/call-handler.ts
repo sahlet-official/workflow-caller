@@ -63,9 +63,9 @@ export class CallHandler {
 
     private async checkAuth(token: string, callAddress: CallAddress): Promise<boolean> {
         const validation = await this.interactor.validateToken(token);
-        console.log("validation = " + validation);
-        console.log("getGroupInfos = " + await this.interactor.getGroupInfos(token));
-        console.log("getAuthConfig = " + await this.interactor.getAuthConfig());
+        console.log("validation = ",  validation);
+        console.log("getGroupInfos = ",  await this.interactor.getGroupInfos(token));
+        console.log("getAuthConfig = ",  await this.interactor.getAuthConfig());
         if (!validation) {
             return false;
         }
@@ -75,7 +75,9 @@ export class CallHandler {
 
         for (let i = 0; i < infos.length; i++) {
             const groupInfo = infos[i];
+            console.log("FIND ME 1");
             if (!(groupInfo.uniqueGroupName in authConfig.permissionsRecords)) {
+                console.log("FIND ME 2");
                 continue;
             }
 
@@ -89,9 +91,12 @@ export class CallHandler {
             );
 
             if (callPermission) {
+                console.log("FIND ME 3");
                 return true;
             }
         }
+
+        console.log("FIND ME 4");
 
         return false;
     }
