@@ -106,14 +106,15 @@ async function run() {
         core.info('Workflow finished successfully');
     }
   } catch (err: any) {
-    // const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
-    const msg = "123";
+    const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
+    core.info(`1: ${err.message}`);
+    core.info(`2: ${err.stack}`);
     if (fail_on_error) {
-      core.setFailed(msg);
+      throw err;
     } else {
       core.error(`Error: ${msg}`);
     }
   }
 }
 
-run();
+run().catch((err) => core.setFailed(err.stack ? `${err.message}\n${err.stack}` : err.message));
