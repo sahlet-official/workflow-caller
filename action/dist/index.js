@@ -25765,6 +25765,7 @@ async function run() {
         }
     }
 }
+run();
 
 
 /***/ }),
