@@ -27,14 +27,18 @@ class CallHandlerResponseImpl implements callHandlerNamespace.Response {
     }
 
     noGroupPermission(): void {
-        return this.expressResponse.status(403).json({
+        this.expressResponse.status(403)
+        .type('application/json')
+        .json({
             error: 'noGroupPermission',
             message: 'Group does not have the required permissions.',
         });
     }
 
     error(info: any): void {
-        this.expressResponse.status(500).json({
+        this.expressResponse.status(500)
+        .type('application/json')
+        .json({
             error: true,
             message: typeof info === 'string' ? info : info?.message || 'Unknown Error',
             details: info,
@@ -42,7 +46,9 @@ class CallHandlerResponseImpl implements callHandlerNamespace.Response {
     }
 
     success(result: any): void {
-        this.expressResponse.status(200).json(result ? result : {});
+        this.expressResponse.status(200)
+        .type('application/json')
+        .json(result ? result : {});
     }
 }
 

@@ -106,7 +106,8 @@ async function run() {
         core.info('Workflow finished successfully');
     }
   } catch (err: any) {
-    const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
+    // const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
+    const msg = "123";
     if (fail_on_error) {
       core.setFailed(msg);
     } else {
