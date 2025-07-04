@@ -108,9 +108,11 @@ async function run() {
   } catch (err: any) {
     const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
     if (fail_on_error) {
-      core.setFailed(msg)
+      core.setFailed(msg);
     } else {
       core.error(`Error: ${msg}`);
     }
   }
 }
+
+run();
