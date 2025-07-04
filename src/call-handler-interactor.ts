@@ -373,4 +373,13 @@ export class CallHandlerInteractorImpl implements CallHandlerInteractor {
 
         return res;
     }
+
+    log(...args: any[]): void {
+        const formatted = args.map(arg =>
+            typeof arg === 'object' && arg !== null
+            ? JSON.stringify(arg, null, 2)
+            : arg
+        );
+        console.log(...formatted);
+    }
 }
