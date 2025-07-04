@@ -64,8 +64,8 @@ export class CallHandler {
     private async checkAuth(token: string, callAddress: CallAddress): Promise<boolean> {
         const validation = await this.interactor.validateToken(token);
         console.log("validation = ",  validation);
-        console.log("getGroupInfos = ",  await this.interactor.getGroupInfos(token));
-        console.log("getAuthConfig = ",  await this.interactor.getAuthConfig());
+        console.log("getGroupInfos = ",  JSON.stringify(await this.interactor.getGroupInfos(token), null, 2));
+        console.log("getAuthConfig = ",  JSON.stringify(await this.interactor.getAuthConfig(), null, 2));
         if (!validation) {
             return false;
         }
@@ -81,8 +81,11 @@ export class CallHandler {
                 continue;
             }
 
+            console.log("callAddress = ", JSON.stringify(callAddress, null, 2));
+
             const callPermission = authConfig.permissionsRecords[groupInfo.uniqueGroupName].permissions.find(
                 (elem) => {
+                    console.log("elem = ", JSON.stringify(elem, null, 2));
                     return elem.callAddress.owner === callAddress.owner &&
                     elem.callAddress.repo === callAddress.repo &&
                     elem.callAddress.workflowFile === callAddress.workflowFile &&
