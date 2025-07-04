@@ -49,19 +49,11 @@ async function makeCall(
   try {
     result = await response.json();
   } catch (error) {
-    throw new Error(`
-      Error:
-      cant get json from response,
-      details: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}
-    `);
+    throw new Error(`Error:\ncant get json from response,\ndetails: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}`);
   }
 
   if (!response.ok) {
-    throw new Error(`
-      Error:
-      HTTP status: ${response.status},
-      details: ${JSON.stringify(result, null, 2)}
-    `);
+    throw new Error(`Error:\nHTTP status: ${response.status},\ndetails: ${JSON.stringify(result, null, 2)}`);
   }
 
   return result;
@@ -113,13 +105,12 @@ async function run() {
     if (call_type === 'TriggerAndWait' || call_type === 'TriggerAndWaitResult') {
         core.info('Workflow finished successfully');
     }
-  } catch (error) {
+  } catch (err: any) {
+    const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
     if (fail_on_error) {
-        throw error;
+      core.setFailed(msg)
     } else {
-        core.error(`Error: ${(error as Error).message}`);
+      core.error(`Error: ${msg}`);
     }
   }
 }
-
-run().catch((err) => core.setFailed(err.stack ? `${err.message}\n${err.stack}` : err.message));
