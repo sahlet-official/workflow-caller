@@ -25737,7 +25737,7 @@ async function run() {
     const owner = core.getInput('owner', { required: true });
     const repo = core.getInput('repo', { required: true });
     const workflow = core.getInput('workflow', { required: true });
-    const ref = core.getInput('repo', { required: true });
+    const ref = core.getInput('ref', { required: true });
     let oidc_token = core.getInput('oidc_token');
     const oidc_audience = core.getInput('oidc_audience');
     const input = core.getInput('input');
