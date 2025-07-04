@@ -42,7 +42,7 @@ class CallHandlerResponseImpl implements callHandlerNamespace.Response {
     }
 
     success(result: any): void {
-        this.expressResponse.status(200).json(result);
+        this.expressResponse.status(200).json(result ? result : {});
     }
 }
 
