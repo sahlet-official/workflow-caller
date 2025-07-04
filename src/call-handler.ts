@@ -63,6 +63,9 @@ export class CallHandler {
 
     private async checkAuth(token: string, callAddress: CallAddress): Promise<boolean> {
         const validation = await this.interactor.validateToken(token);
+        console.log("validation = " + validation);
+        console.log("getGroupInfos = " + await this.interactor.getGroupInfos(token));
+        console.log("getAuthConfig = " + await this.interactor.getAuthConfig());
         if (!validation) {
             return false;
         }
