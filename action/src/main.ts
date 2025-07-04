@@ -47,13 +47,13 @@ async function makeCall(
   let result: string;
 
   try {
-    result = await response.json();
+    result = await response.text();
   } catch (error) {
     throw new Error(`Error:\ncant get json from response,\ndetails: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}`);
   }
 
   if (!response.ok) {
-    throw new Error(`Error:\nHTTP status: ${response.status},\ndetails: ${JSON.stringify(result, null, 2)}`);
+    throw new Error(`Error:\nHTTP status: ${response.status},\ndetails: ${result}`);
   }
 
   return result;
@@ -106,15 +106,12 @@ async function run() {
         core.info('Workflow finished successfully');
     }
   } catch (err: any) {
-    const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
-    core.info(`1: ${err.message}`);
-    core.info(`2: ${err.stack}`);
     if (fail_on_error) {
       throw err;
     } else {
-      core.error(`Error: ${msg}`);
+      core.error(err.stack ? err.stack : `Error: ${err.message}`);
     }
   }
 }
 
-run().catch((err) => core.setFailed(err.stack ? `${err.message}\n${err.stack}` : err.message));
+run().catch((err) => core.setFailed(err.stack ? err.stack : `Error: ${err.message}`));
