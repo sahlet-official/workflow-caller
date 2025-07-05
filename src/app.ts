@@ -1,4 +1,6 @@
 import express, { response } from 'express';
+import http from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 import { CallHandler } from './call-handler';
 import { CallHandlerInteractorImpl } from './call-handler-interactor';
 import * as callHandlerNamespace from './call-handler';
@@ -19,36 +21,97 @@ const callHandlerInteractor = new CallHandlerInteractorImpl(
 );
 const callHandler = new CallHandler(callHandlerInteractor);
 
-class CallHandlerResponseImpl implements callHandlerNamespace.Response {
+interface ErrorViewModel {
+    status: Number;
+    message: string;
+    details: any;
+}
+
+interface SuccessViewModel {
+    status: Number;
+    result: any;
+}
+
+interface BodySender {
+    send: (status: Number, body: any) => void;
+}
+
+class BodySenderHttp implements BodySender {
     private expressResponse: any;
 
     constructor(expressResponse: any) {
         this.expressResponse = expressResponse;
     }
 
+    send(status: Number, body: any) {
+        this.expressResponse.status(status).json(body);
+    };
+}
+
+class BodySenderWebSocket implements BodySender {
+    private ws: WebSocket;
+
+    constructor(ws: WebSocket) {
+        this.ws = ws;
+    }
+
+    send(status: Number, body: any) {
+        this.ws.send(JSON.stringify(body, null, 2));
+    };
+}
+
+class CallHandlerResponseImpl implements callHandlerNamespace.Response {
+    private sender: BodySender;
+
+    constructor(sender: BodySender) {
+        this.sender = sender;
+    }
+
+    badRequest(info: any): void {
+        const status = 400;
+
+        const body: ErrorViewModel = {
+            status: status,
+            message: 'Bad Request',
+            details: info,
+        }
+
+        this.sender.send(status, body);
+    }
+
     noGroupPermission(): void {
-        this.expressResponse.status(403)
-        .type('application/json')
-        .json({
-            error: 'noGroupPermission',
-            message: 'Group does not have the required permissions.',
-        });
+        const status = 403;
+
+        const body: ErrorViewModel = {
+            status: status,
+            message: 'noGroupPermission',
+            details: 'Group does not have the required permissions.',
+        }
+
+        this.sender.send(status, body);
     }
 
     error(info: any): void {
-        this.expressResponse.status(500)
-        .type('application/json')
-        .json({
-            error: true,
+        const status = 500;
+
+        const body: ErrorViewModel = {
+            status: status,
             message: typeof info === 'string' ? info : info?.message || 'Unknown Error',
             details: info,
-        });
+        }
+
+        this.sender.send(status, body);
     }
 
     success(result: any): void {
-        this.expressResponse.status(200)
-        .type('application/json')
-        .json(result ? result : {});
+        const status = 200;
+
+        const body: SuccessViewModel = {
+            status: status,
+            result: result ? result : {}
+        }
+
+        this.sender.send(status, body);
     }
 }
 
@@ -77,16 +140,15 @@ const app = express();
 app.use(express.json());
 
 app.post('/github-workflow-call', async (req, res) => {
+    const response = new CallHandlerResponseImpl(new BodySenderHttp(res));
+
     let request: callHandlerNamespace.Request | undefined;
 
     {
         const parseResult = RequestSchema.safeParse(req.body);
 
         if (!parseResult.success) {
-            res.status(400).json({
-                error: 'Bad Request',
-                message: parseResult.error.format(),
-            })
+            response.badRequest(parseResult.error.format());
             return;
         }
 
@@ -95,11 +157,45 @@ app.post('/github-workflow-call', async (req, res) => {
         request = requestBody as callHandlerNamespace.Request;
     }
 
-    const response = new CallHandlerResponseImpl(res);
-
     callHandler.call(request, response);
 });
 
-app.listen(port, () => {
+const server = http.createServer(app);
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', (ws: WebSocket) => {
+  ws.on('message', (msg) => {
+    const response = new CallHandlerResponseImpl(new BodySenderWebSocket(ws));
+
+    let request: callHandlerNamespace.Request | undefined;
+
+    {
+        const parseResult = RequestSchema.safeParse(msg);
+
+        if (!parseResult.success) {
+            response.badRequest(parseResult.error.format());
+            return;
+        }
+
+        const requestBody = parseResult.data;
+
+        request = requestBody as callHandlerNamespace.Request;
+    }
+
+    callHandler.call(request, response);
+  });
+});
+
+server.on('upgrade', (req, socket, head) => {
+  if (req.url === '/github-workflow-call-ws') {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+
+server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
